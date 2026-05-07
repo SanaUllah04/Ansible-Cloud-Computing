@@ -1,0 +1,73 @@
+---
+- name: Create prometheus user
+  user:
+    name: prometheus
+    shell: /usr/sbin/nologin
+    system: yes
+
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+  loop:
+    - /etc/prometheus
+    - /var/lib/prometheus
+
+- name: Deploy prometheus config from template
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+
+- name: Download prometheus binary (use distro packages if preferred)
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: /tmp/prometheus.tar.gz
+  when: not ansible_check_mode
+
+- name: Extract prometheus
+  unarchive:
+    src: /tmp/prometheus.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+  when: not ansible_check_mode
+
+- name: Install prometheus binary and set ownership
+  command: cp /usr/local/bin/prometheus-{{ prometheus_version }}.linux-amd64/prometheus /usr/local/bin/
+  args:
+    creates: /usr/local/bin/prometheus
+  when: not ansible_check_mode
+
+- name: Create systemd unit for prometheus
+  copy:
+    dest: /etc/systemd/system/prometheus.service
+    content: |
+      [Unit]
+      Description=Prometheus
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      User=prometheus
+      ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/var/lib/prometheus
+
+      [Install]
+      WantedBy=multi-user.target
+  when: not ansible_check_mode
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: not ansible_check_mode
+
+- name: Enable and start prometheus
+  systemd:
+    name: prometheus
+    enabled: yes
+    state: started
+  when: not ansible_check_mode

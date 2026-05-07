@@ -1,0 +1,57 @@
+---
+- name: Add Grafana APT repository (Debian/Ubuntu)
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  when: not ansible_check_mode
+
+- name: Install apt transport https and dependencies
+  apt:
+    name: ["apt-transport-https", "gnupg", "curl"]
+    state: present
+    update_cache: yes
+  when: not ansible_check_mode
+
+- name: Add Grafana GPG key
+  get_url:
+    url: https://apt.grafana.com/gpg-full.key
+    dest: /etc/apt/keyrings/grafana.asc
+    mode: "0644"
+  when: not ansible_check_mode
+
+- name: Add Grafana APT repository file
+  copy:
+    dest: /etc/apt/sources.list.d/grafana.list
+    content: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+    mode: "0644"
+  when: not ansible_check_mode
+
+- name: Refresh apt cache after adding Grafana repository
+  apt:
+    update_cache: yes
+  when: not ansible_check_mode
+
+- name: Install grafana
+  apt:
+    name: grafana
+    state: present
+    update_cache: yes
+  when: not ansible_check_mode
+
+- name: Configure grafana.ini from template
+  template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart grafana
+  when: not ansible_check_mode
+
+- name: Enable and start grafana
+  systemd:
+    name: grafana-server
+    enabled: yes
+    state: started
+  when: not ansible_check_mode

@@ -1,0 +1,17 @@
+---
+- name: Deploy node_exporter to all hosts
+  hosts: all
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - { role: node_exporter, tags: [node_exporter] }
+
+- name: Configure monitoring server services
+  hosts: monitoring_server
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - { role: prometheus, tags: [prometheus] }
+    - { role: grafana, tags: [grafana] }

@@ -1,0 +1,12 @@
+---
+# Target server address used by the Prometheus template. Use private IP if scraping over VPC.
+target_server_ip: "172.31.45.242"
+
+# Grafana admin password (change this in production)
+grafana_admin_password: "admin123"
+
+# Node exporter version
+node_exporter_version: "1.6.1"
+
+# Prometheus version used by the deployment role
+prometheus_version: "3.11.3"

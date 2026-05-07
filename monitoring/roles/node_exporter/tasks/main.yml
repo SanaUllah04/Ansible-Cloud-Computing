@@ -1,0 +1,55 @@
+---
+- name: Create node_exporter user
+  user:
+    name: node_exporter
+    shell: /usr/sbin/nologin
+    system: yes
+
+- name: Download node_exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/node_exporter.tar.gz
+    mode: "0644"
+  when: not ansible_check_mode
+
+- name: Extract node_exporter
+  unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+    creates: "/usr/local/bin/node_exporter-{{ node_exporter_version }}.linux-amd64"
+  when: not ansible_check_mode
+
+- name: Install node_exporter binary
+  command: cp /usr/local/bin/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter /usr/local/bin/
+  args:
+    creates: /usr/local/bin/node_exporter
+  when: not ansible_check_mode
+
+- name: Create systemd service file
+  copy:
+    dest: /etc/systemd/system/node_exporter.service
+    content: |
+      [Unit]
+      Description=Node Exporter
+      After=network.target
+
+      [Service]
+      User=node_exporter
+      ExecStart=/usr/local/bin/node_exporter
+
+      [Install]
+      WantedBy=default.target
+  when: not ansible_check_mode
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: not ansible_check_mode
+
+- name: Enable and start node_exporter
+  systemd:
+    name: node_exporter
+    enabled: yes
+    state: started
+  when: not ansible_check_mode

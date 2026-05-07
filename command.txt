@@ -1,0 +1,20 @@
+# SSH checks (replace key/IPs if different)
+ssh -i ~/keys/ansible.pem ubuntu@18.221.21.17
+ssh -i ~/keys/ansible.pem ubuntu@18.188.196.233
+
+# Dry-run
+ansible-playbook playbook.yml --check -i inventory.ini
+
+# Deploy
+ansible-playbook playbook.yml -i inventory.ini
+
+# Verify services (via Ansible)
+ansible monitoring_server -m command -a "systemctl is-active node_exporter prometheus grafana-server" -i inventory.ini
+
+# Prometheus check
+http://18.221.21.17:9090/targets
+
+# Grafana
+# URL: http://18.221.21.17:3000
+# Login: admin / admin123
+# Dashboard: /d/node-exporter-monitoring/node-exporter-system-monitoring

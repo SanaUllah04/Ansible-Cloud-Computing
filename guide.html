@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ansible Monitoring Stack</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1e2530;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --accent3: #3fb950;
+    --accent4: #d2a8ff;
+    --accent5: #ffa657;
+    --text: #e6edf3;
+    --text-muted: #7d8590;
+    --text-dim: #484f58;
+    --code-bg: #0d1117;
+    --yellow: #e3b341;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 40px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(88,166,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(63,185,80,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 0%, #58a6ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 620px;
+    margin-bottom: 30px;
+  }
+  .hero-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .stack-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .stack-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .wrapper { max-width: 960px; margin: 0 auto; padding: 40px; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 48px 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .num {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--accent4);
+    margin: 28px 0 10px;
+  }
+
+  p { margin-bottom: 12px; color: #c9d1d9; }
+  ul, ol { padding-left: 22px; margin-bottom: 14px; }
+  li { margin-bottom: 6px; color: #c9d1d9; }
+  strong { color: var(--text); font-weight: 600; }
+
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 14px 0 20px;
+    overflow: hidden;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .code-header .dots { display: flex; gap: 6px; }
+  .code-header .dots span {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .dot-red { background: #f47067; }
+  .dot-yellow { background: #e3b341; }
+  .dot-green { background: #3fb950; }
+
+  pre {
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #e6edf3;
+  }
+  pre .comment { color: #6e7681; font-style: italic; }
+  pre .key { color: #79c0ff; }
+  pre .val { color: #a5d6ff; }
+  pre .str { color: #a8daff; }
+  pre .cmd { color: var(--accent3); }
+  pre .flag { color: var(--accent5); }
+  pre .prompt { color: var(--text-muted); user-select: none; }
+
+  .card {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    border-left: 3px solid;
+    font-size: 14px;
+  }
+  .card-info { background: rgba(88,166,255,0.07); border-color: var(--accent); }
+  .card-tip  { background: rgba(63,185,80,0.07);  border-color: var(--accent3); }
+  .card-warn { background: rgba(247,129,102,0.07); border-color: var(--accent2); }
+  .card-concept { background: rgba(210,168,255,0.07); border-color: var(--accent4); }
+  .card-script { background: rgba(227,179,65,0.07); border-color: var(--yellow); }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .card-info .card-title  { color: var(--accent); }
+  .card-tip .card-title   { color: var(--accent3); }
+  .card-warn .card-title  { color: var(--accent2); }
+  .card-concept .card-title { color: var(--accent4); }
+  .card-script .card-title { color: var(--yellow); }
+
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+
+  svg text { font-family: 'JetBrains Mono', monospace; }
+
+  .steps { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .step-num {
+    display: flex;
+    align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    background: rgba(88,166,255,0.15);
+    border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content { flex: 1; }
+  .step-content strong { display: block; margin-bottom: 4px; font-size: 14px; }
+  .step-content p { margin: 0; font-size: 13.5px; }
+
+  .service-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13.5px;
+  }
+  .service-table th {
+    background: var(--surface);
+    color: var(--text-muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+  .service-table td {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .service-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent3); }
+  .badge-orange { background: rgba(255,166,87,0.15); color: var(--accent5); }
+
+  .port { fill: #e3b341; font-size: 10px; }
+  .box-label { font-size: 12px; font-weight: 600; fill: #e6edf3; }
+  .box-sub { font-size: 10px; fill: #7d8590; }
+  .arrow-label { font-size: 10px; fill: #7d8590; }
+
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    padding: 8px 0 8px 30px;
+    position: relative;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    font-size: 14px;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before {
+    content: '☐';
+    position: absolute;
+    left: 4px;
+    color: var(--text-dim);
+    font-size: 16px;
+  }
+
+  .footer {
+    margin-top: 60px;
+    padding: 30px 40px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  @media print {
+    body { background: white; color: #111; }
+    .hero { background: #f0f6ff; }
+    .code-block { border: 1px solid #ccc; }
+    pre { color: #111; background: #f8f8f8; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Demo</div>
+    <h1>Build a Monitoring Stack<br>with Ansible on AWS EC2</h1>
+    <div class="hero-stack">
+      <div class="stack-chip"><div class="dot" style="background:#e6522c"></div>Ansible</div>
+      <div class="stack-chip"><div class="dot" style="background:#e6522c"></div>Prometheus</div>
+      <div class="stack-chip"><div class="dot" style="background:#f46800"></div>Grafana</div>
+      <div class="stack-chip"><div class="dot" style="background:#58a6ff"></div>Node Exporter</div>
+      <div class="stack-chip"><div class="dot" style="background:#3fb950"></div>Ubuntu 22.04 (EC2)</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrapper">
+
+<div class="section-title"><span class="num"></span> What You Will Build</div>
+
+<p>Fully working <strong>observability stack</strong> running on two Linux servers, all deployed automatically with a single Ansible command.</p>
+
+<div class="card card-info">
+  <div class="card-title">Goal</div>
+  Run <code>ansible-playbook playbook.yml</code> and get a live Grafana dashboard showing real CPU, memory, disk, and network metrics from two servers.
+</div>
+
+<div class="card card-concept">
+  <div class="card-title">Deployment Defaults</div>
+  The provisioning script in <code>monitoring/scripts/provision_ec2.sh</code> defaults to AWS region <strong>us-east-2</strong>. You can change the region by setting the environment variable <code>AWS_DEFAULT_REGION</code> or when prompted by the script.
+</div>
+
+<table class="service-table">
+  <thead>
+    <tr><th>Component</th><th>Installed On</th><th>Port</th><th>What It Does</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Node Exporter</strong></td>
+      <td>ALL servers</td>
+      <td><span class="badge badge-blue">9100</span></td>
+      <td>Exposes OS metrics (CPU, RAM, disk, network) as HTTP endpoint</td>
+    </tr>
+    <tr>
+      <td><strong>Prometheus</strong></td>
+      <td>Monitoring Server</td>
+      <td><span class="badge badge-orange">9090</span></td>
+      <td>Scrapes metrics from Node Exporters and stores them as time-series</td>
+    </tr>
+    <tr>
+      <td><strong>Grafana</strong></td>
+      <td>Monitoring Server</td>
+      <td><span class="badge badge-green">3000</span></td>
+      <td>Beautiful dashboards, queries Prometheus, alerts</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-title" style="margin-top:32px; border:none; padding:0; font-size:1rem; color: var(--text-muted);">System Architecture</div>
+
+<div class="diagram-wrap">
+<svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" width="100%">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#58a6ff" opacity="0.7"/>
+    </marker>
+    <marker id="arr2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3fb950" opacity="0.7"/>
+    </marker>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect x="20" y="30" width="520" height="280" rx="12"
+    fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <text x="270" y="24" text-anchor="middle" font-family="Syne,sans-serif"
+    font-size="13" font-weight="700" fill="#58a6ff">monitoring server</text>
+
+  <rect x="50" y="60" width="190" height="100" rx="8"
+    fill="#1e2530" stroke="#e6522c" stroke-width="1.5"/>
+  <text x="145" y="90" text-anchor="middle" class="box-label">Prometheus</text>
+  <text x="145" y="108" text-anchor="middle" class="box-sub">collects &amp; stores metrics</text>
+  <rect x="92" y="120" width="106" height="22" rx="5" fill="rgba(230,82,44,0.15)"/>
+  <text x="145" y="135" text-anchor="middle" class="port" fill="#e6522c">:9090</text>
+
+  <rect x="280" y="60" width="190" height="100" rx="8"
+    fill="#1e2530" stroke="#f46800" stroke-width="1.5"/>
+  <text x="375" y="90" text-anchor="middle" class="box-label">Grafana</text>
+  <text x="375" y="108" text-anchor="middle" class="box-sub">visualises dashboards</text>
+  <rect x="322" y="120" width="106" height="22" rx="5" fill="rgba(244,104,0,0.15)"/>
+  <text x="375" y="135" text-anchor="middle" class="port" fill="#f46800">:3000</text>
+
+  <rect x="160" y="210" width="190" height="80" rx="8"
+    fill="#1e2530" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="255" y="240" text-anchor="middle" class="box-label">Node Exporter</text>
+  <text x="255" y="258" text-anchor="middle" class="box-sub">local system metrics</text>
+  <rect x="202" y="264" width="106" height="18" rx="4" fill="rgba(63,185,80,0.12)"/>
+  <text x="255" y="277" text-anchor="middle" class="port" fill="#3fb950">:9100</text>
+
+  <rect x="600" y="80" width="260" height="180" rx="12"
+    fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <text x="730" y="73" text-anchor="middle" font-family="Syne,sans-serif"
+    font-size="13" font-weight="700" fill="#58a6ff">target server</text>
+
+  <rect x="625" y="105" width="190" height="80" rx="8"
+    fill="#1e2530" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="720" y="135" text-anchor="middle" class="box-label">Node Exporter</text>
+  <text x="720" y="153" text-anchor="middle" class="box-sub">target system metrics</text>
+  <rect x="662" y="159" width="116" height="18" rx="4" fill="rgba(63,185,80,0.12)"/>
+  <text x="720" y="172" text-anchor="middle" class="port" fill="#3fb950">:9100</text>
+
+  <rect x="330" y="295" width="220" height="38" rx="8"
+    fill="rgba(88,166,255,0.08)" stroke="rgba(88,166,255,0.3)" stroke-width="1.5"/>
+  <text x="440" y="319" text-anchor="middle" font-family="JetBrains Mono,monospace"
+    font-size="12" fill="#58a6ff">Ansible Controller</text>
+
+  <line x1="240" y1="110" x2="280" y2="110"
+    stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <text x="260" y="100" text-anchor="middle" class="arrow-label">query</text>
+
+  <line x1="145" y1="160" x2="200" y2="210"
+    stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="155" y="195" class="arrow-label">scrape</text>
+
+  <line x1="240" y1="110" x2="600" y2="145"
+    stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="518" y="160" text-anchor="middle" class="arrow-label">scrape :9100</text>
+
+  <line x1="410" y1="295" x2="270" y2="168"
+    stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,3" opacity="0.5" marker-end="url(#arr)"/>
+  <line x1="470" y1="295" x2="730" y2="261"
+    stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,3" opacity="0.5" marker-end="url(#arr)"/>
+
+  <text x="375" y="60" text-anchor="middle" font-size="20"></text>
+  <text x="440" y="57" font-size="11" fill="#7d8590">Browser :3000</text>
+</svg>
+</div>
+
+
+<div class="section-title"><span class="num"></span> Prerequisites</div>
+
+<div class="steps">
+  <div class="step">
+    <div class="step-num">A</div>
+    <div class="step-content">
+      <strong>Two EC2 instances (Ubuntu 22.04)</strong>
+      <p>Launch two Ubuntu 22.04 EC2 instances (a monitoring server and a target server). They should be reachable from your workstation via their public IPs or be in the same VPC if using private addresses.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">B</div>
+    <div class="step-content">
+      <strong>Ansible Control Node</strong>
+      <p>This is where you install Ansible and run playbooks. It only needs SSH access to the two servers.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">C</div>
+      <div class="step-content">
+        <strong>EC2 Key Pair / SSH Access</strong>
+        <p>When launching EC2 instances, create or select an EC2 Key Pair (a .pem file). Use that private key to SSH: <code>ssh -i ~/keys/my-ec2-key.pem ubuntu@&lt;public-ip&gt;</code>. Ensure the key file has strict permissions: <code>chmod 600</code>.</p>
+      </div>
+  </div>
+</div>
+
+
+<div class="section-title"><span class="num"></span> Install Ansible on Your Control Node</div>
+
+<p>Run these commands on your <strong>local machine</strong></p>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>bash — control node</span>
+  </div>
+  <pre><span class="prompt">$ </span><span class="comment"># Ubuntu / Debian</span>
+<span class="cmd">sudo apt update</span>
+<span class="cmd">sudo apt install -y software-properties-common</span>
+<span class="cmd">sudo add-apt-repository --yes --update ppa:ansible/ansible</span>
+<span class="cmd">sudo apt install -y ansible</span>
+
+<span class="comment"># Verify installation</span>
+<span class="cmd">ansible --version</span>
+</div>
+
+
+<!-- ── 3. SSH Setup ── -->
+<div class="section-title"><span class="num">3</span> Set Up SSH Key Authentication</div>
+
+<p>Ansible communicates with servers over SSH. We need passwordless login.</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>bash — control node</span>
+  </div>
+  <pre><span class="comment"># If you launched EC2 instances with a key pair (.pem)</span>
+  <span class="cmd">chmod 600 ~/keys/my-ec2-key.pem</span>
+  <span class="cmd">ssh -i ~/keys/my-ec2-key.pem ubuntu@&lt;monitoring-public-ip&gt;</span>
+  <span class="cmd">ssh -i ~/keys/my-ec2-key.pem ubuntu@&lt;target-public-ip&gt;</span>
+
+  <span class="comment"># Alternative: If you need to add your own public key to the instance (for a different key)</span>
+  <span class="cmd">ssh -i ~/keys/my-ec2-key.pem ubuntu@&lt;public-ip&gt; 'mkdir -p ~/.ssh && echo "$(cat ~/.ssh/id_rsa.pub)" >> ~/.ssh/authorized_keys'</span>
+
+  <span class="comment"># Test SSH connections (should NOT ask for password when using the PEM key)</span>
+  <span class="cmd">ssh -i ~/keys/my-ec2-key.pem ubuntu@&lt;monitoring-public-ip&gt; "echo 'monitoring OK'"</span>
+  <span class="cmd">ssh -i ~/keys/my-ec2-key.pem ubuntu@&lt;target-public-ip&gt; "echo 'target OK'"</span></pre>
+</div>
+
+<div class="card card-warn">
+  <div class="card-title">⚠️ Common Issue</div>
+  If <code>ssh-copy-id</code> fails, check that the <code>ubuntu</code> user exists on the server and password authentication is temporarily enabled in <code>/etc/ssh/sshd_config</code> (<code>PasswordAuthentication yes</code>).
+</div>
+
+
+<!-- ── 4. Project Setup ── -->
+<div class="section-title"><span class="num">4</span> Set Up the Project Files</div>
+
+<p>Download or unzip the project folder, then update it with <strong>your</strong> server IPs.</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>bash — control node</span>
+  </div>
+  <pre><span class="comment"># Unzip the project</span>
+<span class="cmd">unzip monitoring-ansible.zip</span>
+<span class="cmd">cd monitoring</span>
+
+<span class="comment"># Verify the folder structure</span>
+<span class="cmd">tree .</span></pre>
+</div>
+
+<h3>Edit <code>inventory.ini</code></h3>
+<p>Open <code>inventory.ini</code> and replace the IP addresses with your actual server IPs:</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>inventory.ini</span>
+  </div>
+  <pre><span class="key">[monitoring_server]</span>
+  <span class="val">monitoring</span> ansible_host=<span class="str">&lt;MONITORING_PUBLIC_IP&gt;</span> ansible_user=ubuntu ansible_ssh_private_key_file=~/<span class="str">keys/my-ec2-key.pem</span>
+
+  <span class="key">[target_servers]</span>
+  <span class="val">target</span> ansible_host=<span class="str">&lt;TARGET_PUBLIC_IP&gt;</span> ansible_user=ubuntu ansible_ssh_private_key_file=~/<span class="str">keys/my-ec2-key.pem</span>
+
+  <span class="key">[all:vars]</span>
+  ansible_python_interpreter=/usr/bin/python3
+
+  <span class="comment"># Tip: replace &lt;MONITORING_PUBLIC_IP&gt; and &lt;TARGET_PUBLIC_IP&gt; with the public IPs from the EC2 console.</span></pre>
+</div>
+
+<h3>Edit <code>group_vars/all.yml</code></h3>
+<p>Update the <code>target_server_ip</code> variable to your target server's IP. Prometheus needs this to know where to scrape metrics from.</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>group_vars/all.yml — key lines</span>
+  </div>
+  <pre><span class="comment"># ↓ Change this to your actual target server IP (use the EC2 private IP if Prometheus scrapes over VPC)</span>
+  <span class="key">target_server_ip</span>: <span class="str">"&lt;TARGET_PRIVATE_IP or TARGET_PUBLIC_IP&gt;"</span>
+
+  <span class="comment"># Optional: change Grafana password</span>
+  <span class="key">grafana_admin_password</span>: <span class="str">"admin123"</span>
+
+  <span class="comment"># If monitoring uses private VPC addresses, use the target's private IP here and ensure security group allows traffic between the monitoring and target instances.</span></pre>
+</div>
+
+
+<!-- ── 5. Understanding the Files ── -->
+<div class="section-title"><span class="num">5</span> Understanding the Project Structure</div>
+
+<div class="card card-concept">
+  <div class="card-title">🧠 Ansible Concept: Roles</div>
+  A <strong>role</strong> is a reusable, self-contained unit of automation. Instead of writing one huge playbook, we split work into roles: <code>node_exporter</code>, <code>prometheus</code>, and <code>grafana</code>. Each role has its own tasks, templates, and default variables. This is how professional Ansible code is organized.
+</div>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>Project tree</span>
+  </div>
+  <pre>monitoring/
+├── <span class="key">inventory.ini</span>          <span class="comment">← Defines which servers to manage</span>
+├── <span class="key">ansible.cfg</span>            <span class="comment">← Ansible settings (user, SSH, etc.)</span>
+├── <span class="key">playbook.yml</span>           <span class="comment">← Master playbook (entry point)</span>
+├── group_vars/
+│   └── <span class="key">all.yml</span>            <span class="comment">← Variables shared across all hosts</span>
+└── roles/
+    ├── node_exporter/
+    │   ├── tasks/<span class="key">main.yml</span>   <span class="comment">← Install Node Exporter steps</span>
+    │   └── defaults/<span class="key">main.yml</span> <span class="comment">← Default variable values</span>
+    ├── prometheus/
+    │   ├── tasks/<span class="key">main.yml</span>   <span class="comment">← Install Prometheus steps</span>
+    │   └── templates/
+    │       └── <span class="key">prometheus.yml.j2</span>  <span class="comment">← Config template with variables</span>
+    └── grafana/
+        ├── tasks/<span class="key">main.yml</span>   <span class="comment">← Install Grafana steps</span>
+        └── templates/
+            └── <span class="key">grafana.ini.j2</span>  <span class="comment">← Grafana config template</span></pre>
+</div>
+
+<div class="card card-concept">
+  <div class="card-title">🧠 Ansible Concept: Jinja2 Templates (<code>.j2</code>)</div>
+  Template files use <code>{{ variable_name }}</code> syntax. When Ansible runs, it replaces these placeholders with actual values from <code>group_vars/all.yml</code>. This means one template works for any environment — just change the variables!
+</div>
+
+<h3>The Prometheus Config Template (rendered output)</h3>
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>prometheus.yml — what gets deployed to server</span>
+  </div>
+  <pre><span class="key">global</span>:
+  <span class="key">scrape_interval</span>:     <span class="str">15s</span>
+  <span class="key">evaluation_interval</span>: <span class="str">15s</span>
+
+<span class="key">scrape_configs</span>:
+
+  <span class="comment"># Prometheus monitors itself</span>
+  - <span class="key">job_name</span>: <span class="str">'prometheus'</span>
+    <span class="key">static_configs</span>:
+      - <span class="key">targets</span>: [<span class="str">'localhost:9090'</span>]
+
+  <span class="comment"># Scrape local Node Exporter (monitoring server)</span>
+  - <span class="key">job_name</span>: <span class="str">'node_exporter_monitoring'</span>
+    <span class="key">static_configs</span>:
+      - <span class="key">targets</span>: [<span class="str">'localhost:9100'</span>]
+        <span class="key">labels</span>:
+          <span class="key">instance</span>: <span class="str">'monitoring-server'</span>
+
+  <span class="comment"># Scrape remote Node Exporter (target server)</span>
+  - <span class="key">job_name</span>: <span class="str">'node_exporter_target'</span>
+    <span class="key">static_configs</span>:
+      - <span class="key">targets</span>: [<span class="str">'192.168.1.20:9100'</span>]
+        <span class="key">labels</span>:
+          <span class="key">instance</span>: <span class="str">'target-server'</span></pre>
+</div>
+
+
+<!-- ── 6. Run the Playbook ── -->
+<div class="section-title"><span class="num">6</span> Run the Playbook</div>
+
+<p>Now the exciting part. One command deploys everything:</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>bash — control node (from inside the monitoring/ folder)</span>
+  </div>
+  <pre><span class="comment"># First: do a dry run (no changes, just check)</span>
+<span class="cmd">ansible-playbook playbook.yml --check</span>
+
+<span class="comment"># Run for real</span>
+<span class="cmd">ansible-playbook playbook.yml</span>
+
+<span class="comment"># Run with verbose output (great for learning/debugging)</span>
+<span class="cmd">ansible-playbook playbook.yml -v</span>
+
+<span class="comment"># Run only a specific role using tags</span>
+<span class="cmd">ansible-playbook playbook.yml --tags node_exporter</span></pre>
+</div>
+
+<h3>What You'll See (expected output)</h3>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>playbook output</span>
+  </div>
+  <pre>PLAY [📦 Install Node Exporter on all hosts] *****
+
+TASK [node_exporter : Create node_exporter system user]
+<span class="cmd">ok: [monitoring]</span>
+<span class="cmd">ok: [target]</span>
+
+TASK [node_exporter : Download Node Exporter binary]
+<span class="flag">changed: [monitoring]</span>
+<span class="flag">changed: [target]</span>
+
+...
+
+TASK [node_exporter : Print Node Exporter status]
+<span class="cmd">ok: [monitoring] =&gt; {
+    "msg": "✅ Node Exporter is UP on port 9100"
+}</span>
+
+PLAY RECAP *****
+<span class="cmd">monitoring</span>  : ok=12  changed=8   unreachable=0  failed=0
+<span class="cmd">target</span>      : ok=7   changed=5   unreachable=0  failed=0</pre>
+</div>
+
+<div class="card card-concept">
+  <div class="card-title">🧠 Ansible Concept: Idempotency</div>
+  Notice <code>ok</code> vs <code>changed</code> in the output. If you run the playbook again, tasks that are already in the desired state show <code>ok</code> (no changes made). This is <strong>idempotency</strong> — you can safely run the playbook 100 times and it will only change what needs changing. This makes automation safe and predictable.
+</div>
+
+
+<!-- ── 7. Verify Services ── -->
+<div class="section-title"><span class="num">7</span> Verify Services Are Running</div>
+
+<h3>Check on the Monitoring Server</h3>
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>bash — monitoring server (SSH in or use Ansible)</span>
+  </div>
+  <pre><span class="comment"># Check all three services</span>
+<span class="cmd">systemctl status node_exporter prometheus grafana-server</span>
+
+<span class="comment"># Check that ports are listening</span>
+<span class="cmd">ss -tlnp | grep -E '9090|9100|3000'</span>
+
+<span class="comment"># Test Node Exporter endpoint</span>
+<span class="cmd">curl -s http://localhost:9100/metrics | head -20</span>
+
+<span class="comment"># Test Prometheus API</span>
+<span class="cmd">curl -s http://localhost:9090/-/ready</span>
+<span class="comment"># → Should return: Prometheus Server is Ready.</span>
+
+<span class="comment"># Test Grafana API</span>
+<span class="cmd">curl -s http://localhost:3000/api/health</span>
+<span class="comment"># → Should return: {"commit":"...","database":"ok",...}</span></pre>
+</div>
+
+<h3>Use Ansible to Verify Remotely</h3>
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>bash — control node</span>
+  </div>
+  <pre><span class="comment"># Check Node Exporter status on all hosts</span>
+<span class="cmd">ansible all -m command -a "systemctl is-active node_exporter"</span>
+
+<span class="comment"># Check Prometheus on monitoring server</span>
+<span class="cmd">ansible monitoring_server -m command -a "systemctl is-active prometheus"</span>
+
+<span class="comment"># View Prometheus config that was deployed</span>
+<span class="cmd">ansible monitoring_server -m command -a "cat /etc/prometheus/prometheus.yml"</span></pre>
+</div>
+
+
+<!-- ── 8. Open Prometheus UI ── -->
+<div class="section-title"><span class="num">8</span> Explore the Prometheus UI</div>
+
+<p>Open your browser and go to: <code>http://&lt;monitoring_server_ip&gt;:9090</code></p>
+
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <strong>Check Targets</strong>
+      <p>Click <strong>Status → Targets</strong>. You should see 3 targets all showing <span style="color: var(--accent3)">State: UP</span> — prometheus, node_exporter_monitoring, and node_exporter_target.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <strong>Run a Query</strong>
+      <p>In the search box, type <code>node_cpu_seconds_total</code> and click <strong>Execute</strong>. You'll see raw CPU metrics from both servers.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <strong>Try a PromQL expression</strong>
+      <p>Type <code>100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)</code> — this gives you live CPU usage % per server.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── 9. Grafana Setup ── -->
+<div class="section-title"><span class="num">9</span> Set Up Grafana Dashboard</div>
+
+<p>Open your browser and go to: <code>http://&lt;monitoring_server_ip&gt;:3000</code></p>
+
+<div class="card card-info">
+  <div class="card-title">🔑 Default Login</div>
+  Username: <code>admin</code> &nbsp;&nbsp; Password: <code>admin123</code> (set in group_vars/all.yml)<br/>
+  Grafana will prompt you to change the password on first login — you can skip this for the lab.
+</div>
+
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <strong>Verify the Prometheus data source</strong>
+      <p>Go to <strong>Connections → Data Sources</strong>. You should already see <em>Prometheus</em> listed (provisioned by Ansible). Click it and hit <strong>Save &amp; Test</strong> to confirm it connects.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <strong>Import the Node Exporter Full dashboard</strong>
+      <p>Click the <strong>+</strong> icon in the sidebar → <strong>Import dashboard</strong>. In the "Import via grafana.com" field, enter: <code>1860</code>. Click <strong>Load</strong>.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <strong>Select your data source</strong>
+      <p>On the next screen, under the Prometheus dropdown, select <strong>Prometheus</strong>. Click <strong>Import</strong>.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-content">
+      <strong>Explore your live dashboard!</strong>
+      <p>You should now see a rich dashboard with CPU usage, memory, disk I/O, network traffic, load average, and more — live from both servers. Use the <strong>instance</strong> dropdown at the top to switch between servers.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card card-tip">
+  <div class="card-title">✅ Pro Tip — Dashboard ID 1860</div>
+  The "Node Exporter Full" dashboard (ID 1860) is one of the most popular community dashboards on grafana.com. It was designed specifically for Node Exporter and works perfectly with our Prometheus setup.
+</div>
+
+
+<!-- ── 10. Demo Script ── -->
+<div class="section-title"><span class="num">10</span> 🎤 Presenter Demo Script</div>
+
+<div class="card card-script">
+  <div class="card-title">📋 Suggested Script for Live Classroom Demo</div>
+</div>
+
+<h3>Opening (2 min)</h3>
+<div class="card card-script">
+  <p><em>"Today we're going to deploy an entire monitoring stack — three production-grade tools — across two servers. We'll do it with a single command, and in about 5 minutes. This is the power of Infrastructure as Code."</em></p>
+  <p><em>"In the real world, DevOps teams use exactly this kind of setup — Prometheus, Grafana, and Node Exporter — to watch thousands of servers. We're learning the same tools, just at a smaller scale."</em></p>
+</div>
+
+<h3>While Running the Playbook (3 min)</h3>
+<div class="card card-script">
+  <p><em>"Watch the output. See those green 'ok' and yellow 'changed' lines — that's Ansible telling us what it did. The first time you run this, most tasks will say 'changed'. If you run it again without changing anything, they'll all say 'ok' — because Ansible checks the current state before acting. This is called <strong>idempotency</strong>."</em></p>
+  <p><em>"Right now, Ansible is: creating system users, downloading binaries from GitHub, extracting them, writing config files from templates, registering systemd services, and starting them. All automatically. Think about how long that would take manually on 50 servers."</em></p>
+</div>
+
+<h3>Showing Prometheus (2 min)</h3>
+<div class="card card-script">
+  <p><em>"Here's Prometheus. Notice under Targets — all three are green, State: UP. Prometheus is now polling our Node Exporters every 15 seconds and storing the time-series data."</em></p>
+  <p><em>"Prometheus speaks its own query language called PromQL. Watch this..."</em> [run a query] <em>"...that's live CPU data. But raw numbers aren't very useful — that's where Grafana comes in."</em></p>
+</div>
+
+<h3>Showing Grafana Dashboard (2 min)</h3>
+<div class="card card-script">
+  <p><em>"And here is Grafana — connected to Prometheus automatically by Ansible. After importing dashboard 1860, look at this: CPU, memory, disk, network, filesystem — everything. And we can switch between our two servers here."</em></p>
+  <p><em>"Imagine if we had 20 servers to monitor. We'd add them to the inventory and re-run the playbook. Ansible handles the rest — including updating Prometheus' config to scrape the new servers. That's <strong>scaling with automation</strong>."</em></p>
+</div>
+
+<h3>Closing Key Points</h3>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">★</div>
+    <div class="step-content">
+      <strong>Idempotency</strong>
+      <p>Safe to run multiple times. Ansible only changes what needs to change. No accidental restarts.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">★</div>
+    <div class="step-content">
+      <strong>Declarative Infrastructure</strong>
+      <p>You describe the desired state ("Grafana should be running") not the steps to get there. Ansible figures out the steps.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">★</div>
+    <div class="step-content">
+      <strong>Version Control</strong>
+      <p>All these files live in Git. Your entire infrastructure is documented and reproducible. "If it's not in Git, it doesn't exist."</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">★</div>
+    <div class="step-content">
+      <strong>Scaling</strong>
+      <p>Need to monitor 100 servers? Add them to inventory, update prometheus config, run one command. Done.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── 11. Troubleshooting ── -->
+<div class="section-title"><span class="num">11</span> Troubleshooting Guide</div>
+
+<table class="service-table">
+  <thead>
+    <tr><th>Problem</th><th>Likely Cause</th><th>Fix</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>UNREACHABLE!</code> in playbook</td>
+      <td>SSH not configured</td>
+      <td>Check <code>ssh-copy-id</code> and test manual SSH</td>
+    </tr>
+    <tr>
+      <td>Target shows <code>DOWN</code> in Prometheus</td>
+      <td>Firewall blocking port 9100</td>
+      <td>Run <code>ufw allow 9100</code> on target server</td>
+    </tr>
+    <tr>
+      <td>Grafana shows "Data source error"</td>
+      <td>Prometheus not running</td>
+      <td><code>systemctl restart prometheus</code></td>
+    </tr>
+    <tr>
+      <td>Port 3000 not accessible from browser</td>
+      <td>Firewall on monitoring server</td>
+      <td><code>ufw allow 3000</code> and <code>ufw allow 9090</code></td>
+    </tr>
+    <tr>
+      <td><code>Failed to connect to the host</code></td>
+      <td>Wrong IP in inventory</td>
+      <td>Double check <code>inventory.ini</code> IPs</td>
+    </tr>
+    <tr>
+      <td>Download tasks timeout</td>
+      <td>Server has no internet</td>
+      <td>Check <code>curl https://github.com</code> from server</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="code-block">
+  <div class="code-header">
+    <div class="dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
+    <span>bash — useful debug commands</span>
+  </div>
+  <pre><span class="comment"># Test Ansible can reach all hosts</span>
+<span class="cmd">ansible all -m ping</span>
+
+<span class="comment"># Check Node Exporter logs</span>
+<span class="cmd">journalctl -u node_exporter -n 50 --no-pager</span>
+
+<span class="comment"># Check Prometheus logs</span>
+<span class="cmd">journalctl -u prometheus -n 50 --no-pager</span>
+
+<span class="comment"># Check Grafana logs</span>
+<span class="cmd">journalctl -u grafana-server -n 50 --no-pager</span>
+
+<span class="comment"># Validate Prometheus config</span>
+<span class="cmd">promtool check config /etc/prometheus/prometheus.yml</span>
+
+<span class="comment"># Reload Prometheus config without restart</span>
+<span class="cmd">curl -X POST http://localhost:9090/-/reload</span></pre>
+</div>
+
+
+<!-- ── Checklist ── -->
+<div class="section-title"><span class="num">✓</span> Lab Completion Checklist</div>
+
+<div class="card card-tip">
+  <ul class="checklist">
+    <li>Ansible installed and <code>ansible --version</code> works</li>
+    <li>SSH key auth working — can connect without password to both servers</li>
+    <li><code>inventory.ini</code> updated with correct IP addresses</li>
+    <li><code>group_vars/all.yml</code> updated with target_server_ip</li>
+    <li>Playbook runs with 0 failures: <code>ansible-playbook playbook.yml</code></li>
+    <li>Node Exporter running on both servers (port 9100)</li>
+    <li>Prometheus running on monitoring server (port 9090)</li>
+    <li>All 3 Prometheus targets show <span style="color: var(--accent3)">State: UP</span></li>
+    <li>Grafana running on monitoring server (port 3000)</li>
+    <li>Prometheus data source shows green "Data source is working"</li>
+    <li>Dashboard 1860 imported and showing live metrics</li>
+    <li>Can switch between server instances in dashboard dropdown</li>
+  </ul>
+</div>
+
+</div><!-- /wrapper -->
+
+<div class="footer">
+  Ansible Monitoring Lab Guide &nbsp;·&nbsp; Built for DevOps Classroom Use &nbsp;·&nbsp;
+  Stack: Ansible · Prometheus · Grafana · Node Exporter
+</div>
+
+</body>
+</html>
