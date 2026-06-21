@@ -5,7 +5,7 @@
 
 ---
 
-![Documentation guide (guide.html)](monitoring/media/frontend.PNG)
+![Documentation guide (guide.html)](monitoring/media/frontpage.PNG)
 
 ## 📋 Overview
 
@@ -29,7 +29,7 @@ This project provides an Ansible playbook to automatically configure and deploy 
 
 ##  System Archietecture
 
-![System Architecture](monitoring/media/System_Architecture.png)
+![System Architecture](monitoring/media/system_Architecture.png)
 
 
 
