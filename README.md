@@ -5,6 +5,8 @@
 
 ---
 
+![Documentation guide (guide.html)](monitoring/media/frontend.PNG)
+
 ## 📋 Overview
 
 This project provides an Ansible playbook to automatically configure and deploy a robust monitoring stack on Ubuntu 22.04 EC2 instances.
@@ -23,6 +25,13 @@ This project provides an Ansible playbook to automatically configure and deploy 
 3. **Control Node**: Ensure Ansible is installed on your local machine.
 
 ---
+
+
+##  System Archietecture
+
+![System Architecture](monitoring/media/System_Architecture.png)
+
+
 
 ## ⚙️ Setup & Configuration
 
@@ -58,6 +67,11 @@ From the `monitoring` directory, you can run the playbook to deploy the stack.
    ```
 
 ---
+
+
+## Project Structure
+
+![Project Structure](monitoring/media/Project_Structure.png)
 
 ## 🔍 Verification & Access
 
