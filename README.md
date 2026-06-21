@@ -5,7 +5,7 @@
 
 ---
 
-![Documentation guide (guide.html)](monitoring/media/frontpage.PNG)
+![Documentation guide (guide.html)](monitoring/media/frontpage.png)
 
 ## 📋 Overview
 
